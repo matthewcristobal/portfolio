@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Matthew — Battery Engineer</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0f0d;
+    --surface: #111816;
+    --surface2: #161d1a;
+    --accent: #c8f560;
+    --accent2: #4af0a0;
+    --text: #e8ede8;
+    --muted: #7a9180;
+    --border: #1e2b24;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  /* Navigation */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 20px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid transparent;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(0px);
+  }
+
+  nav.scrolled {
+    border-color: var(--border);
+    backdrop-filter: blur(20px);
+    background: rgba(10,15,13,0.8);
+  }
+
+  .nav-logo {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-decoration: none;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 32px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.06em;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--accent); }
+
+  /* Hero */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 0 48px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse 60% 50% at 70% 40%, rgba(200,245,96,0.06) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 60% at 20% 80%, rgba(74,240,160,0.04) 0%, transparent 60%);
+  }
+
+  .hero-grid {
+    position: absolute;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(200,245,96,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,245,96,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: linear-gradient(to bottom, transparent 0%, black 30%, black 70%, transparent 100%);
+  }
+
+  .hero-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.2s forwards;
+  }
+
+  .hero-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(56px, 8vw, 112px);
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    margin-bottom: 32px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.4s forwards;
+  }
+
+  .hero-name em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero-desc {
+    max-width: 520px;
+    font-size: 17px;
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 48px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.6s forwards;
+  }
+
+  .hero-desc strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.8s forwards;
+  }
+
+  .btn-primary {
+    padding: 14px 28px;
+    background: var(--accent);
+    color: #0a0f0d;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+  }
+
+  .btn-primary:hover {
+    background: #d8ff70;
+    transform: translateY(-2px);
+  }
+
+  .btn-ghost {
+    padding: 14px 28px;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+
+  .btn-ghost:hover {
+    color: var(--text);
+    border-color: var(--muted);
+  }
+
+  .hero-status {
+    position: absolute;
+    top: 100px;
+    right: 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    opacity: 0;
+    animation: fadeIn 1s ease 1.2s forwards;
+  }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s ease infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* Section styles */
+  section {
+    padding: 120px 48px;
+    border-top: 1px solid var(--border);
+  }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 64px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .section-label::after {
+    content: '';
+    height: 1px;
+    width: 60px;
+    background: var(--border);
+  }
+
+  /* Currently */
+  .currently-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+  }
+
+  .currently-item {
+    background: var(--surface);
+    padding: 40px;
+    transition: background 0.2s;
+  }
+
+  .currently-item:hover { background: var(--surface2); }
+
+  .currently-item .label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .currently-item h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+
+  .currently-item p {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* Projects */
+  .projects-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--border);
+  }
+
+  .project-item {
+    background: var(--surface);
+    padding: 48px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 40px;
+    align-items: start;
+    transition: background 0.2s;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .project-item:hover { background: var(--surface2); }
+
+  .project-item:hover .project-arrow { transform: translate(4px, -4px); }
+
+  .project-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .project-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    line-height: 1.15;
+    margin-bottom: 16px;
+  }
+
+  .project-desc {
+    font-size: 15px;
+    color: var(--muted);
+    max-width: 600px;
+    line-height: 1.7;
+  }
+
+  .project-meta {
+    display: flex;
+    gap: 24px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+
+  .project-chip {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    letter-spacing: 0.04em;
+  }
+
+  .project-arrow {
+    font-size: 24px;
+    color: var(--accent);
+    transition: transform 0.2s;
+    margin-top: 4px;
+    flex-shrink: 0;
+  }
+
+  /* Skills */
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: var(--border);
+  }
+
+  .skill-block {
+    background: var(--surface);
+    padding: 40px;
+  }
+
+  .skill-block h3 {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .skill-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .skill-tag {
+    font-size: 13px;
+    color: var(--muted);
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+
+  .skill-tag:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* Writing section */
+  .writing-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: var(--border);
+  }
+
+  .writing-item {
+    background: var(--surface);
+    padding: 40px;
+    transition: background 0.2s;
+  }
+
+  .writing-item:hover { background: var(--surface2); }
+
+  .writing-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    margin-bottom: 12px;
+  }
+
+  .writing-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    line-height: 1.25;
+    margin-bottom: 12px;
+  }
+
+  .writing-excerpt {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* Footer / contact */
+  .contact {
+    padding: 120px 48px;
+    border-top: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: end;
+  }
+
+  .contact-heading {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(40px, 5vw, 72px);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  .contact-heading em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .contact-links {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .contact-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    color: var(--text);
+    font-size: 15px;
+    transition: all 0.2s;
+    group: true;
+  }
+
+  .contact-link:hover {
+    border-color: var(--accent);
+    background: var(--surface2);
+  }
+
+  .contact-link:hover .link-arrow { color: var(--accent); }
+
+  .link-arrow {
+    font-size: 18px;
+    color: var(--muted);
+    transition: color 0.2s;
+  }
+
+  footer {
+    padding: 24px 48px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  footer p {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <a href="#" class="nav-logo">MW ✦</a>
+  <ul class="nav-links">
+    <li><a href="#work">Work</a></li>
+    <li><a href="#writing">Writing</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+
+  <div class="hero-status">
+    <div class="status-pill">
+      <div class="status-dot"></div>
+      Incoming · Tesla, Palo Alto
+    </div>
+    <div class="status-pill" style="--accent: #4af0a0;">
+      <div class="status-dot" style="background: var(--accent2);"></div>
+      UW Materials Science · 2025
+    </div>
+  </div>
+
+  <p class="hero-eyebrow">Battery Engineer & Materials Scientist</p>
+  <h1 class="hero-name">Matthew<br><em>Warburton</em></h1>
+  <p class="hero-desc">
+    I work on the <strong>cells that power the energy transition</strong> — from graphite anode optimization and slot-die coating to 3D-printed battery architectures. Currently finishing my BS at UW and heading to <strong>Tesla</strong> as a Vendor Cell Engineering intern.
+  </p>
+  <div class="hero-actions">
+    <a href="#work" class="btn-primary">View Projects</a>
+    <a href="#contact" class="btn-ghost">Get in Touch</a>
+  </div>
+</section>
+
+<!-- Currently -->
+<section id="about">
+  <div class="section-label">Currently</div>
+  <div class="currently-grid reveal">
+    <div class="currently-item">
+      <div class="label">Role</div>
+      <h3>Vendor Cell Engineering Intern</h3>
+      <p>Joining Tesla in Palo Alto, July 2026. Focused on evaluating and qualifying battery cell suppliers.</p>
+    </div>
+    <div class="currently-item">
+      <div class="label">Research</div>
+      <h3>Capstone Lead, Sugino Corp.</h3>
+      <p>Engineering Team Lead on CASF applied to LPBF-manufactured parts — CRES 316, Ti-6Al-4V, Inconel 718.</p>
+    </div>
+    <div class="currently-item">
+      <div class="label">Building</div>
+      <h3>Writing on Batteries</h3>
+      <p>Publishing technical deep-dives on cell chemistry, manufacturing, and the energy transition for engineers.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Projects -->
+<section id="work">
+  <div class="section-label">Selected Work</div>
+  <div class="projects-list">
+
+    <a href="#" class="project-item reveal">
+      <div>
+        <div class="project-tag">Research · MacKenzie Lab</div>
+        <h2 class="project-title">Graphite Anode Optimization & Slot-Die Coating</h2>
+        <p class="project-desc">Investigated graphite anode processing parameters at the Washington Clean Energy Testbeds. Developed slot-die coating protocols to improve electrode uniformity and cycle performance.</p>
+        <div class="project-meta">
+          <span class="project-chip">Electrode Processing</span>
+          <span class="project-chip">Slot-Die Coating</span>
+          <span class="project-chip">UW Testbeds</span>
+        </div>
+      </div>
+      <div class="project-arrow">↗</div>
+    </a>
+
+    <a href="#" class="project-item reveal">
+      <div>
+        <div class="project-tag">Research · Cobb Group</div>
+        <h2 class="project-title">3D-Printed Battery Architectures</h2>
+        <p class="project-desc">Explored additive manufacturing approaches to battery electrode design, investigating how printed architectures affect ion transport and capacity utilization relative to conventional calendered electrodes.</p>
+        <div class="project-meta">
+          <span class="project-chip">Additive Manufacturing</span>
+          <span class="project-chip">Electrode Architecture</span>
+          <span class="project-chip">Electrochemistry</span>
+        </div>
+      </div>
+      <div class="project-arrow">↗</div>
+    </a>
+
+    <a href="#" class="project-item reveal">
+      <div>
+        <div class="project-tag">Capstone · Sugino Corp.</div>
+        <h2 class="project-title">Cavitation Abrasive Surface Finishing for LPBF Parts</h2>
+        <p class="project-desc">Led an engineering team applying CASF to laser powder bed fusion components in CRES 316, Ti-6Al-4V, and Inconel 718. Developed ABET-aligned design documentation and performance validation protocols.</p>
+        <div class="project-meta">
+          <span class="project-chip">LPBF</span>
+          <span class="project-chip">Surface Engineering</span>
+          <span class="project-chip">Team Lead</span>
+          <span class="project-chip">Ti-6Al-4V</span>
+        </div>
+      </div>
+      <div class="project-arrow">↗</div>
+    </a>
+
+    <a href="#" class="project-item reveal">
+      <div>
+        <div class="project-tag">Computational · MSE Coursework</div>
+        <h2 class="project-title">DFT Study: Hydrogen Adsorption on Graphene</h2>
+        <p class="project-desc">Ran first-principles DFT calculations using Quantum ESPRESSO on the UW Hyak/Klone HPC cluster. Investigated hydrogen adsorption energetics on graphene and diamond-vs-graphite thermodynamic stability.</p>
+        <div class="project-meta">
+          <span class="project-chip">Quantum ESPRESSO</span>
+          <span class="project-chip">DFT</span>
+          <span class="project-chip">HPC</span>
+          <span class="project-chip">Graphene</span>
+        </div>
+      </div>
+      <div class="project-arrow">↗</div>
+    </a>
+
+  </div>
+</section>
+
+<!-- Skills -->
+<section>
+  <div class="section-label">Capabilities</div>
+  <div class="skills-grid reveal">
+    <div class="skill-block">
+      <h3>Materials & Electrochemistry</h3>
+      <div class="skill-tags">
+        <span class="skill-tag">Electrode Processing</span>
+        <span class="skill-tag">Slot-Die Coating</span>
+        <span class="skill-tag">Cell Characterization</span>
+        <span class="skill-tag">SEM/EDS</span>
+        <span class="skill-tag">XRD</span>
+        <span class="skill-tag">Failure Analysis</span>
+        <span class="skill-tag">LPBF</span>
+      </div>
+    </div>
+    <div class="skill-block">
+      <h3>Computation & Data</h3>
+      <div class="skill-tags">
+        <span class="skill-tag">DFT / Quantum ESPRESSO</span>
+        <span class="skill-tag">Python</span>
+        <span class="skill-tag">MATLAB</span>
+        <span class="skill-tag">HPC (Hyak/Klone)</span>
+        <span class="skill-tag">Data Analysis</span>
+      </div>
+    </div>
+    <div class="skill-block">
+      <h3>Engineering & Leadership</h3>
+      <div class="skill-tags">
+        <span class="skill-tag">Project Management</span>
+        <span class="skill-tag">ABET Documentation</span>
+        <span class="skill-tag">Team Leadership</span>
+        <span class="skill-tag">Technical Writing</span>
+        <span class="skill-tag">FTA / FMA</span>
+      </div>
+    </div>
+    <div class="skill-block">
+      <h3>Interests</h3>
+      <div class="skill-tags">
+        <span class="skill-tag">Battery Pack Design</span>
+        <span class="skill-tag">EV Technology</span>
+        <span class="skill-tag">Energy Transition</span>
+        <span class="skill-tag">Cell Chemistry</span>
+        <span class="skill-tag">Silicon Anodes</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Writing -->
+<section id="writing">
+  <div class="section-label">Writing</div>
+  <div class="writing-grid reveal">
+    <div class="writing-item">
+      <div class="writing-date">Coming soon</div>
+      <h3 class="writing-title">What Actually Happens Inside a Battery During First Charge</h3>
+      <p class="writing-excerpt">A deep dive into SEI formation, lithium intercalation, and why the first cycle is the most important one your cell will ever have.</p>
+    </div>
+    <div class="writing-item">
+      <div class="writing-date">Coming soon</div>
+      <h3 class="writing-title">Why 4680 Cells Matter — And What Tesla Actually Had to Solve</h3>
+      <p class="writing-excerpt">Breaking down the engineering challenges behind tabless cell design, dry electrode processing, and what it takes to scale a new cell format.</p>
+    </div>
+    <div class="writing-item">
+      <div class="writing-date">Coming soon</div>
+      <h3 class="writing-title">Silicon Anodes: The 30-Year Promise That's Finally Arriving</h3>
+      <p class="writing-excerpt">Silicon's theoretical capacity is 10× graphite's. So why aren't all our batteries made of it? The answer is a masterclass in materials engineering tradeoffs.</p>
+    </div>
+    <div class="writing-item">
+      <div class="writing-date">Coming soon</div>
+      <h3 class="writing-title">Formation Cycling: The Most Underrated Step in Battery Manufacturing</h3>
+      <p class="writing-excerpt">Every cell you've ever used was born in a formation chamber. What happens there sets the trajectory for everything that follows.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Contact -->
+<div class="contact" id="contact">
+  <div>
+    <div class="section-label">Contact</div>
+    <h2 class="contact-heading reveal">Let's<br>work<br><em>together.</em></h2>
+  </div>
+  <div class="contact-links reveal">
+    <a href="mailto:your@email.com" class="contact-link">
+      <span>your@email.com</span>
+      <span class="link-arrow">→</span>
+    </a>
+    <a href="https://linkedin.com/in/yourhandle" class="contact-link" target="_blank">
+      <span>LinkedIn</span>
+      <span class="link-arrow">→</span>
+    </a>
+    <a href="https://github.com/yourhandle" class="contact-link" target="_blank">
+      <span>GitHub</span>
+      <span class="link-arrow">→</span>
+    </a>
+    <a href="#" class="contact-link" target="_blank">
+      <span>Substack — Battery Writing</span>
+      <span class="link-arrow">→</span>
+    </a>
+    <a href="#" class="contact-link">
+      <span>Resume (PDF)</span>
+      <span class="link-arrow">↓</span>
+    </a>
+  </div>
+</div>
+
+<footer>
+  <p>Matthew Warburton · Materials Science & Engineering · UW Seattle</p>
+  <p>Built with intention · 2025</p>
+</footer>
+
+<script>
+  // Nav scroll effect
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 40);
+  });
+
+  // Reveal on scroll
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  reveals.forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
